@@ -8,6 +8,17 @@
 
 ---
 
+## 💾 Direct Download Installer (.DMG)
+
+Download the latest pre-compiled macOS installer package:
+👉 **[Download FaceLockAI-v1.0.dmg](https://github.com/AJforge-dev/FaceLockAI-mac/blob/main/FaceLockAI-v1.0.dmg?raw=true)**
+
+1. Download `FaceLockAI-v1.0.dmg`.
+2. Double-click to open and drag **FaceLockAI.app** into your `/Applications` folder.
+3. Launch **FaceLock AI**!
+
+---
+
 ## ✨ Features
 
 - 📸 **Facial Enrollment & Multi-Sample Vector Extraction**: Captures 5 scale-invariant facial landmark templates (`VNFaceLandmarks2D`) under varying head angles & lighting conditions.
@@ -25,6 +36,7 @@ Organized cleanly using the **MVVM (Model-View-ViewModel)** architectural patter
 
 ```
 FaceLockAI/
+├── FaceLockAI-v1.0.dmg         # Pre-compiled macOS Disk Image Installer
 ├── Package.swift               # SPM Manifest with FaceLockCore & Executable targets
 ├── Info.plist                  # Camera Privacy Entitlements
 ├── LICENSE                     # MIT Open-Source License
@@ -68,8 +80,8 @@ FaceLockAI/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/<your-username>/FaceLockAI.git
-cd FaceLockAI
+git clone https://github.com/AJforge-dev/FaceLockAI-mac.git
+cd FaceLockAI-mac
 
 # 2. Run Unit Test Suite
 swift run FaceLockAITests
@@ -86,17 +98,6 @@ The repository includes a standalone test suite verifying cosine similarity vect
 
 ```bash
 swift run FaceLockAITests
-```
-
-**Test Output:**
-```
-Running FaceLockAI Standalone Unit Tests...
-✓ Test 1 Passed: Cosine Similarity Exact Match (0.99999994)
-✓ Test 2 Passed: Cosine Similarity Orthogonal (0.0)
-✓ Test 3 Passed: Threshold Matching (Confidence: 0.99996215)
-✓ Test 4 Passed: Vault Category Photo Icon Mapping
-
-🎉 ALL UNIT TESTS PASSED SUCCESSFULLY!
 ```
 
 ---
