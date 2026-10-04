@@ -4,7 +4,7 @@ import FaceLockCore
 @main
 struct TestRunner {
     static func main() {
-        print("Running FaceLockAI Standalone Unit Tests...")
+        print("Running FaceVault Standalone Unit Tests...")
         
         let service = FaceRecognitionService.shared
         
@@ -29,7 +29,7 @@ struct TestRunner {
         assert(matchResult.isMatch == true, "Test 3 Failed: Expected isMatch = true")
         print("✓ Test 3 Passed: Threshold Matching (Confidence: \(matchResult.confidence))")
         
-        // Test 4: Vault Category Mapping Test
+        // Test 4: Vault Category Photo Icon Mapping
         let photoCategory = VaultCategory.photos
         assert(photoCategory.iconName == "photo.stack.fill", "Test 4 Failed: Vault Category icon check")
         print("✓ Test 4 Passed: Vault Category Photo Icon Mapping")

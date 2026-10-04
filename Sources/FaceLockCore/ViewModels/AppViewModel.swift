@@ -14,17 +14,17 @@ public enum AuthStatus: String, Sendable {
 }
 
 public enum AppTab: String, CaseIterable, Identifiable {
+    case vault = "FaceVault (Photos, Media & Docs)"
     case dashboard = "Dashboard & Mini Games"
-    case enrollment = "Face Enrollment"
-    case vault = "Secret Vault (Photos, Media & Docs)"
-    case settings = "Settings"
+    case enrollment = "Face ID Enrollment"
+    case settings = "Security & Auth Settings"
     
     public var id: String { rawValue }
 }
 
 @MainActor
 public final class AppViewModel: ObservableObject, CameraManagerDelegate {
-    @Published public var selectedTab: AppTab = .dashboard
+    @Published public var selectedTab: AppTab = .vault
     @Published public var authStatus: AuthStatus = .unauthenticated
     @Published public var isVaultUnlocked: Bool = false
     @Published public var isEnrolled: Bool = false
@@ -45,7 +45,8 @@ public final class AppViewModel: ObservableObject, CameraManagerDelegate {
     @Published public var vaultItems: [VaultItem] = []
     @Published public var selectedVaultCategory: VaultCategory = .all
     @Published public var pinInput: String = ""
-    @Published public var pinError: String? = nil
+    @Published public var passwordInput: String = ""
+    @Published public var authError: String? = nil
     
     public init() {
         self.isEnrolled = SecureStorageService.shared.isEnrolled()
@@ -183,27 +184,57 @@ public final class AppViewModel: ObservableObject, CameraManagerDelegate {
         }
     }
     
+    public func authenticateWithTouchID() {
+        Task {
+            let success = await TouchIDService.shared.authenticateWithTouchID(reason: "Unlock FaceVault Protected Media & Files")
+            if success {
+                self.authError = nil
+                self.isVaultUnlocked = true
+                self.authStatus = .recognized
+                self.statusMessage = "Unlocked with Apple Touch ID"
+            } else {
+                self.authError = "Touch ID authentication failed."
+            }
+        }
+    }
+
     public func authenticateWithPIN() {
         guard SecureStorageService.shared.verifyPIN(pinInput) else {
-            pinError = "Incorrect PIN. Please try again."
+            authError = "Incorrect PIN. Please try again."
             return
         }
-        pinError = nil
+        authError = nil
         pinInput = ""
         isVaultUnlocked = true
         authStatus = .recognized
         statusMessage = "Unlocked with PIN fallback"
     }
+
+    public func authenticateWithPassword() {
+        guard SecureStorageService.shared.verifyPassword(passwordInput) else {
+            authError = "Incorrect Password. Please try again."
+            return
+        }
+        authError = nil
+        passwordInput = ""
+        isVaultUnlocked = true
+        authStatus = .recognized
+        statusMessage = "Unlocked with Master Password"
+    }
     
     public func setupPIN(_ newPIN: String) {
         _ = SecureStorageService.shared.savePIN(newPIN)
+    }
+
+    public func setupPassword(_ newPass: String) {
+        _ = SecureStorageService.shared.savePassword(newPass)
     }
     
     // MARK: - Categorized Secret Vault Handlers
     private func setupVaultDirectories() {
         let fm = FileManager.default
         guard let docs = fm.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
-        let vaultRoot = docs.appendingPathComponent("FaceLockAI_SecretVault")
+        let vaultRoot = docs.appendingPathComponent("FaceVault_SecretData")
         
         let subfolders = ["Photos_Media", "Documents", "SecretNotes"]
         for sub in subfolders {
@@ -219,7 +250,7 @@ public final class AppViewModel: ObservableObject, CameraManagerDelegate {
     public func refreshVaultItems() {
         let fm = FileManager.default
         guard let docs = fm.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
-        let vaultRoot = docs.appendingPathComponent("FaceLockAI_SecretVault")
+        let vaultRoot = docs.appendingPathComponent("FaceVault_SecretData")
         
         var items: [VaultItem] = []
         let categoryMappings: [(String, VaultCategory)] = [
@@ -247,14 +278,14 @@ public final class AppViewModel: ObservableObject, CameraManagerDelegate {
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
-        panel.prompt = "Import to Secret Vault"
+        panel.prompt = "Import to FaceVault"
         panel.title = "Select Photos, Videos, or Documents to Secure"
         
         panel.begin { [weak self] response in
             guard let self = self, response == .OK else { return }
             let fm = FileManager.default
             guard let docs = fm.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
-            let vaultRoot = docs.appendingPathComponent("FaceLockAI_SecretVault")
+            let vaultRoot = docs.appendingPathComponent("FaceVault_SecretData")
             
             for sourceURL in panel.urls {
                 let ext = sourceURL.pathExtension.lowercased()
@@ -289,7 +320,7 @@ public final class AppViewModel: ObservableObject, CameraManagerDelegate {
     public func addSecretNote(title: String, note: String) {
         let fm = FileManager.default
         guard let docs = fm.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
-        let notesDir = docs.appendingPathComponent("FaceLockAI_SecretVault/SecretNotes")
+        let notesDir = docs.appendingPathComponent("FaceVault_SecretData/SecretNotes")
         let file = notesDir.appendingPathComponent("\(title).txt")
         try? note.write(to: file, atomically: true, encoding: .utf8)
         refreshVaultItems()

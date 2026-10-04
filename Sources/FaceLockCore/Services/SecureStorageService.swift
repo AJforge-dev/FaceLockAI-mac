@@ -4,16 +4,16 @@ import Security
 public final class SecureStorageService: Sendable {
     public static let shared = SecureStorageService()
     
-    private let pinKey = "com.facelock.ai.pin"
-    private let templateKey = "com.facelock.ai.facetemplate"
-    private let serviceName = "com.facelock.ai.service"
+    private let pinKey = "com.facevault.ai.pin"
+    private let passwordKey = "com.facevault.ai.password"
+    private let templateKey = "com.facevault.ai.facetemplate"
+    private let serviceName = "com.facevault.ai.service"
 
     private init() {}
 
     // MARK: - Keychain Core Methods
     
     public func saveSecret(_ data: Data, forKey accountKey: String) -> Bool {
-        // Delete existing item if present
         deleteSecret(forKey: accountKey)
         
         let query: [String: Any] = [
@@ -78,6 +78,27 @@ public final class SecureStorageService: Sendable {
         return getPIN() != nil
     }
 
+    // MARK: - Password Helper Methods
+
+    public func savePassword(_ pass: String) -> Bool {
+        guard let data = pass.data(using: .utf8) else { return false }
+        return saveSecret(data, forKey: passwordKey)
+    }
+
+    public func getPassword() -> String? {
+        guard let data = loadSecret(forKey: passwordKey) else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
+    public func verifyPassword(_ pass: String) -> Bool {
+        guard let storedPass = getPassword() else { return false }
+        return storedPass == pass
+    }
+
+    public func hasPassword() -> Bool {
+        return getPassword() != nil
+    }
+
     // MARK: - Face Template Vectors
     
     public func saveFaceTemplates(_ templates: [[Float]]) -> Bool {
@@ -109,7 +130,8 @@ public final class SecureStorageService: Sendable {
 
     public func clearAllData() -> Bool {
         let pinDeleted = deleteSecret(forKey: pinKey)
+        let passDeleted = deleteSecret(forKey: passwordKey)
         let templateDeleted = deleteSecret(forKey: templateKey)
-        return pinDeleted && templateDeleted
+        return pinDeleted && passDeleted && templateDeleted
     }
 }

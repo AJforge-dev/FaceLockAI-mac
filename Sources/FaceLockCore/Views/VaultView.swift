@@ -4,10 +4,13 @@ import AppKit
 public struct VaultView: View {
     @ObservedObject var viewModel: AppViewModel
     @State private var newPIN: String = ""
+    @State private var newPassword: String = ""
     @State private var showPINSetup: Bool = false
+    @State private var showPasswordSetup: Bool = false
     @State private var showAddNoteSheet: Bool = false
     @State private var noteTitle: String = ""
     @State private var noteBody: String = ""
+    @State private var authMode: Int = 0 // 0: Touch ID / Face ID, 1: PIN, 2: Password
     
     public init(viewModel: AppViewModel) {
         self.viewModel = viewModel
@@ -20,10 +23,10 @@ public struct VaultView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
                         VStack(alignment: .leading) {
-                            Text("Secret Protected Vault")
+                            Text("FaceVault Secret Storage")
                                 .font(.title)
                                 .bold()
-                            Text("Local Encrypted Directory: ~/Documents/FaceLockAI_SecretVault/")
+                            Text("Local Encrypted Directory: ~/Documents/FaceVault_SecretData/")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -74,7 +77,7 @@ public struct VaultView: View {
                                 .foregroundColor(.secondary)
                             Text("No items in \(viewModel.selectedVaultCategory.rawValue)")
                                 .font(.headline)
-                            Text("Click the 'Add Files / Media' button above to import your secret photos, videos, or documents into your encrypted vault.")
+                            Text("Click 'Add Files / Media' above to import photos, videos, or documents into your secure vault.")
                                 .font(.callout)
                                 .foregroundColor(.secondary)
                                 .multilineTextAlignment(.center)
@@ -144,47 +147,101 @@ public struct VaultView: View {
                     .frame(width: 340, height: 260)
                 }
             } else {
-                // LOCKED VAULT AUTHENTICATION SCREEN
+                // LOCKED VAULT AUTHENTICATION SCREEN WITH TOUCH ID, FACE ID, PIN & PASSWORD
                 VStack(spacing: 20) {
                     Spacer()
                     Image(systemName: "lock.shield.fill")
                         .font(.system(size: 64))
                         .foregroundColor(.red)
 
-                    Text("Secret Vault Locked")
+                    Text("FaceVault Locked")
                         .font(.title)
                         .bold()
 
-                    Text("Photos, Media, Documents & Secrets are protected.\nPresent your enrolled face to the camera or enter backup PIN.")
+                    Text("Authenticate using your face, Touch ID, PIN, or Password to access protected media & documents.")
                         .font(.body)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
-                        .frame(maxWidth: 420)
+                        .frame(maxWidth: 440)
 
-                    // PIN Fallback Entry
-                    if SecureStorageService.shared.hasPIN() {
-                        VStack(spacing: 12) {
-                            SecureField("Enter Backup PIN", text: $viewModel.pinInput)
-                                .textFieldStyle(.roundedBorder)
-                                .frame(width: 220)
+                    // Auth Option Switcher
+                    Picker("Authentication Method", selection: $authMode) {
+                        Text("Face ID & Touch ID").tag(0)
+                        Text("PIN Code").tag(1)
+                        Text("Master Password").tag(2)
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(maxWidth: 380)
+
+                    if let error = viewModel.authError {
+                        Text(error)
+                            .font(.caption)
+                            .foregroundColor(.red)
+                            .bold()
+                    }
+
+                    // Biometric Touch ID Button
+                    if authMode == 0 {
+                        VStack(spacing: 14) {
+                            if TouchIDService.shared.isTouchIDAvailable() {
+                                Button(action: { viewModel.authenticateWithTouchID() }) {
+                                    Label("Authenticate with Touch ID", systemImage: "touchid")
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .tint(.purple)
+                                .controlSize(.large)
+                            }
                             
-                            if let error = viewModel.pinError {
-                                Text(error)
-                                    .font(.caption)
-                                    .foregroundColor(.red)
-                            }
-
-                            Button("Unlock with PIN") {
-                                viewModel.authenticateWithPIN()
-                            }
-                            .buttonStyle(.borderedProminent)
+                            Text("Continuous Face Recognition runs automatically in camera preview.")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
                         }
                         .padding(.top, 10)
-                    } else {
-                        Button("Set Up Backup PIN") {
-                            showPINSetup = true
+                    } else if authMode == 1 {
+                        // PIN Code Authentication
+                        VStack(spacing: 12) {
+                            if SecureStorageService.shared.hasPIN() {
+                                SecureField("Enter Security PIN", text: $viewModel.pinInput)
+                                    .textFieldStyle(.roundedBorder)
+                                    .frame(width: 220)
+                                
+                                Button("Unlock with PIN") {
+                                    viewModel.authenticateWithPIN()
+                                }
+                                .buttonStyle(.borderedProminent)
+                            } else {
+                                Text("No PIN configured.")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Button("Set Up Security PIN") {
+                                    showPINSetup = true
+                                }
+                                .buttonStyle(.bordered)
+                            }
                         }
-                        .buttonStyle(.bordered)
+                        .padding(.top, 10)
+                    } else if authMode == 2 {
+                        // Master Password Authentication
+                        VStack(spacing: 12) {
+                            if SecureStorageService.shared.hasPassword() {
+                                SecureField("Enter Master Password", text: $viewModel.passwordInput)
+                                    .textFieldStyle(.roundedBorder)
+                                    .frame(width: 240)
+                                
+                                Button("Unlock with Password") {
+                                    viewModel.authenticateWithPassword()
+                                }
+                                .buttonStyle(.borderedProminent)
+                            } else {
+                                Text("No Password configured.")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Button("Set Up Master Password") {
+                                    showPasswordSetup = true
+                                }
+                                .buttonStyle(.bordered)
+                            }
+                        }
                         .padding(.top, 10)
                     }
 
@@ -212,6 +269,28 @@ public struct VaultView: View {
                     }
                     .padding(24)
                     .frame(width: 300, height: 180)
+                }
+                .sheet(isPresented: $showPasswordSetup) {
+                    VStack(spacing: 16) {
+                        Text("Set Master Password")
+                            .font(.headline)
+                        SecureField("Create Master Password", text: $newPassword)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 220)
+                        
+                        HStack {
+                            Button("Cancel") { showPasswordSetup = false }
+                            Button("Save Password") {
+                                if !newPassword.isEmpty {
+                                    viewModel.setupPassword(newPassword)
+                                    showPasswordSetup = false
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+                        }
+                    }
+                    .padding(24)
+                    .frame(width: 320, height: 180)
                 }
             }
         }

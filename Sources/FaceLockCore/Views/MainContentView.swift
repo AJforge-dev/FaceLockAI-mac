@@ -12,18 +12,18 @@ public struct MainContentView: View {
                 HStack(spacing: 10) {
                     ZStack {
                         RoundedRectangle(cornerRadius: 8)
-                            .fill(LinearGradient(colors: [.blue, .cyan], startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .fill(LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing))
                             .frame(width: 32, height: 32)
-                        Image(systemName: "faceid")
-                            .font(.system(size: 18, weight: .bold))
+                        Image(systemName: "lock.shield.fill")
+                            .font(.system(size: 16, weight: .bold))
                             .foregroundColor(.white)
                     }
 
                     VStack(alignment: .leading, spacing: 1) {
-                        Text("FaceLock AI")
+                        Text("FaceVault")
                             .font(.headline)
                             .fontWeight(.bold)
-                        Text("macOS Biometric Vault")
+                        Text("Secure Media & Vault")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }
@@ -61,15 +61,15 @@ public struct MainContentView: View {
                 .padding(14)
                 .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
             }
-            .navigationSplitViewColumnWidth(min: 210, ideal: 230)
+            .navigationSplitViewColumnWidth(min: 220, ideal: 240)
         } detail: {
             switch viewModel.selectedTab {
+            case .vault:
+                VaultView(viewModel: viewModel)
             case .dashboard:
                 DashboardView(viewModel: viewModel)
             case .enrollment:
                 EnrollmentView(viewModel: viewModel)
-            case .vault:
-                VaultView(viewModel: viewModel)
             case .settings:
                 SettingsView(viewModel: viewModel)
             }
@@ -80,14 +80,14 @@ public struct MainContentView: View {
         .onDisappear {
             viewModel.stopCamera()
         }
-        .frame(minWidth: 920, minHeight: 620)
+        .frame(minWidth: 940, minHeight: 640)
     }
 
     private func iconForTab(_ tab: AppTab) -> String {
         switch tab {
+        case .vault: return "lock.rectangle.stack.fill"
         case .dashboard: return "shield.checkered"
         case .enrollment: return "person.badge.shield.checkmark"
-        case .vault: return "lock.rectangle.stack"
         case .settings: return "gearshape.fill"
         }
     }

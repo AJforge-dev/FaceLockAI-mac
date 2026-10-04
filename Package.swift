@@ -3,18 +3,18 @@
 import PackageDescription
 
 let package = Package(
-    name: "FaceLockAI",
+    name: "FaceVault",
     platforms: [
         .macOS(.v14)
     ],
     products: [
         .executable(
-            name: "FaceLockAI",
-            targets: ["FaceLockAI"]
+            name: "FaceVault",
+            targets: ["FaceVault"]
         ),
         .executable(
-            name: "FaceLockAITests",
-            targets: ["FaceLockAITests"]
+            name: "FaceVaultTests",
+            targets: ["FaceVaultTests"]
         )
     ],
     dependencies: [],
@@ -29,17 +29,18 @@ let package = Package(
                 .linkedFramework("CoreMedia"),
                 .linkedFramework("CoreImage"),
                 .linkedFramework("Security"),
+                .linkedFramework("LocalAuthentication"),
                 .linkedFramework("AppKit"),
                 .linkedFramework("SwiftUI")
             ]
         ),
         .executableTarget(
-            name: "FaceLockAI",
+            name: "FaceVault",
             dependencies: ["FaceLockCore"],
             path: "Sources/FaceLockAI"
         ),
         .executableTarget(
-            name: "FaceLockAITests",
+            name: "FaceVaultTests",
             dependencies: ["FaceLockCore"],
             path: "Tests/FaceLockAITests"
         )
