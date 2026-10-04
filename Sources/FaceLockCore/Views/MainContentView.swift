@@ -12,10 +12,10 @@ public struct MainContentView: View {
                 HStack(spacing: 10) {
                     ZStack {
                         RoundedRectangle(cornerRadius: 8)
-                            .fill(LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing))
-                            .frame(width: 32, height: 32)
+                            .fill(LinearGradient(colors: [.blue, .indigo], startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .frame(width: 28, height: 28)
                         Image(systemName: "lock.shield.fill")
-                            .font(.system(size: 16, weight: .bold))
+                            .font(.system(size: 14, weight: .bold))
                             .foregroundColor(.white)
                     }
 
@@ -23,18 +23,18 @@ public struct MainContentView: View {
                         Text("FaceVault")
                             .font(.headline)
                             .fontWeight(.bold)
-                        Text("Secure Media & Vault")
+                        Text("Encrypted File Storage")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }
                     Spacer()
                 }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 16)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
 
                 Divider()
 
-                // Navigation Items List
+                // Sidebar Navigation Items
                 List(AppTab.allCases, selection: $viewModel.selectedTab) { tab in
                     NavigationLink(value: tab) {
                         Label(tab.rawValue, systemImage: iconForTab(tab))
@@ -52,42 +52,41 @@ public struct MainContentView: View {
                     Circle()
                         .fill(viewModel.isVaultUnlocked ? Color.green : Color.red)
                         .frame(width: 8, height: 8)
-                    Text(viewModel.isVaultUnlocked ? "Vault Unlocked" : "Vault Protected")
+                    Text(viewModel.isVaultUnlocked ? "Vault Unlocked" : "Vault Locked")
                         .font(.caption)
-                        .fontWeight(.semibold)
+                        .fontWeight(.medium)
                         .foregroundColor(.secondary)
                     Spacer()
+                    if viewModel.isCameraActive {
+                        Image(systemName: "camera.fill")
+                            .font(.caption2)
+                            .foregroundColor(.green)
+                    }
                 }
                 .padding(14)
-                .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
+                .background(Color(NSColor.controlBackgroundColor).opacity(0.4))
             }
-            .navigationSplitViewColumnWidth(min: 220, ideal: 240)
+            .navigationSplitViewColumnWidth(min: 200, ideal: 220)
         } detail: {
             switch viewModel.selectedTab {
             case .vault:
                 VaultView(viewModel: viewModel)
-            case .dashboard:
-                DashboardView(viewModel: viewModel)
-            case .enrollment:
-                EnrollmentView(viewModel: viewModel)
+            case .faceAccess:
+                FaceAccessView(viewModel: viewModel)
+            case .activity:
+                ActivityView(viewModel: viewModel)
             case .settings:
                 SettingsView(viewModel: viewModel)
             }
         }
-        .onAppear {
-            viewModel.startCamera()
-        }
-        .onDisappear {
-            viewModel.stopCamera()
-        }
-        .frame(minWidth: 940, minHeight: 640)
+        .frame(minWidth: 880, minHeight: 600)
     }
 
     private func iconForTab(_ tab: AppTab) -> String {
         switch tab {
-        case .vault: return "lock.rectangle.stack.fill"
-        case .dashboard: return "shield.checkered"
-        case .enrollment: return "person.badge.shield.checkmark"
+        case .vault: return "folder.fill"
+        case .faceAccess: return "faceid"
+        case .activity: return "clock.fill"
         case .settings: return "gearshape.fill"
         }
     }
