@@ -2,7 +2,6 @@ import SwiftUI
 
 public struct DashboardView: View {
     @ObservedObject var viewModel: AppViewModel
-    @State private var activeGameTab: Int = 0 // 0: Ludo, 1: Car Parking
     
     public init(viewModel: AppViewModel) {
         self.viewModel = viewModel
@@ -10,7 +9,7 @@ public struct DashboardView: View {
 
     public var body: some View {
         HSplitView {
-            // Left Column: Live Camera & Recognition State
+            // Left Column: Live Camera & Biometric Stream Monitor
             VStack(spacing: 16) {
                 ZStack {
                     CameraPreviewRepresentable()
@@ -21,7 +20,7 @@ public struct DashboardView: View {
                                 .stroke(statusBorderColor, lineWidth: 3)
                         )
 
-                    // Animated Recognition Frame Overlay
+                    // Animated Recognition Status Frame
                     VStack {
                         Spacer()
                         HStack {
@@ -39,10 +38,10 @@ public struct DashboardView: View {
                     }
                 }
 
-                // Confidence gauge
+                // Match Score Progress
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
-                        Text("Recognition Match Score")
+                        Text("Vision Recognition Match Score")
                             .font(.caption)
                             .foregroundColor(.secondary)
                         Spacer()
@@ -55,15 +54,15 @@ public struct DashboardView: View {
                 }
                 .padding(.horizontal, 4)
 
-                // Secret Vault Quick Access Banner Button
+                // Secret Vault Quick Access Banner
                 Button(action: { viewModel.selectedTab = .vault }) {
                     HStack {
                         Image(systemName: "lock.shield.fill")
                             .font(.title2)
                         VStack(alignment: .leading) {
-                            Text("Secret Vault (Photos, Media & Docs)")
+                            Text("FaceVault Secret Storage")
                                 .font(.headline)
-                            Text(viewModel.isVaultUnlocked ? "Unlocked - Click to View Media" : "Locked - Face Auth Required")
+                            Text(viewModel.isVaultUnlocked ? "Unlocked — View Encrypted Media" : "Locked — Biometric Auth Required")
                                 .font(.caption)
                                 .opacity(0.8)
                         }
@@ -71,7 +70,7 @@ public struct DashboardView: View {
                         Image(systemName: "chevron.right")
                     }
                     .padding()
-                    .background(viewModel.isVaultUnlocked ? Color.green.opacity(0.2) : Color.red.opacity(0.2))
+                    .background(viewModel.isVaultUnlocked ? Color.green.opacity(0.18) : Color.red.opacity(0.18))
                     .cornerRadius(10)
                     .overlay(
                         RoundedRectangle(cornerRadius: 10)
@@ -83,36 +82,135 @@ public struct DashboardView: View {
                 Spacer()
             }
             .padding(16)
-            .frame(minWidth: 320, maxWidth: .infinity)
+            .frame(minWidth: 340, maxWidth: .infinity)
 
-            // Right Column: Interactive Mac Games (Ludo & Car Parking)
-            VStack(alignment: .leading, spacing: 14) {
-                Picker("Select Game", selection: $activeGameTab) {
-                    Text("🎲 Ludo Board").tag(0)
-                    Text("🚗 Car Parking Sim").tag(1)
+            // Right Column: Professional Security Analytics & Activity Audit Logs
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Security Analytics & System Health")
+                    .font(.title2)
+                    .bold()
+
+                // Security Metrics Grid (3 Key Performance Indicators)
+                HStack(spacing: 12) {
+                    metricCard(
+                        title: "Total Scans",
+                        value: "\(viewModel.totalScansCount)",
+                        icon: "eye.fill",
+                        color: .blue
+                    )
+                    
+                    metricCard(
+                        title: "Verified Matches",
+                        value: "\(viewModel.successfulMatchesCount)",
+                        icon: "checkmark.shield.fill",
+                        color: .green
+                    )
+
+                    metricCard(
+                        title: "Security Alerts",
+                        value: "\(viewModel.securityAlertsCount)",
+                        icon: "exclamationmark.triangle.fill",
+                        color: .orange
+                    )
                 }
-                .pickerStyle(.segmented)
-                .padding(.bottom, 4)
 
-                if activeGameTab == 0 {
-                    LudoGameView()
-                } else {
-                    CarParkingGameView()
+                Divider()
+
+                // Real-Time Audit Log Timeline
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Live Security Audit Log")
+                            .font(.headline)
+                        Spacer()
+                        Text("Real-Time Event Audit")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+
+                    List(viewModel.securityLogs) { log in
+                        HStack(spacing: 12) {
+                            Image(systemName: log.iconName)
+                                .foregroundColor(colorForStatus(log.status))
+                                .font(.system(size: 14, weight: .semibold))
+                                .frame(width: 20)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(log.event)
+                                    .font(.system(size: 13, weight: .medium))
+                                Text(formattedTime(log.timestamp))
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
+
+                            Text(log.status)
+                                .font(.caption2)
+                                .fontWeight(.bold)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(colorForStatus(log.status).opacity(0.2))
+                                .foregroundColor(colorForStatus(log.status))
+                                .cornerRadius(6)
+                        }
+                        .padding(.vertical, 2)
+                    }
+                    .listStyle(.inset)
+                    .cornerRadius(10)
                 }
 
                 Spacer()
 
+                // Bottom Status Bar
                 HStack {
-                    Image(systemName: "shield.fill")
+                    Image(systemName: "checkmark.seal.fill")
                         .foregroundColor(.green)
-                    Text("FaceLock Security Active — Continuous Face Monitoring running in background.")
+                    Text("System Status: Operational | All Biometric Templates Encrypted in Keychain")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
             }
             .padding(16)
-            .frame(minWidth: 360, maxWidth: .infinity)
+            .frame(minWidth: 380, maxWidth: .infinity)
         }
+    }
+
+    private func metricCard(title: String, value: String, icon: String, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: icon)
+                    .foregroundColor(color)
+                    .font(.title3)
+                Spacer()
+            }
+            Text(value)
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+            Text(title)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(NSColor.controlBackgroundColor))
+        .cornerRadius(10)
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color.primary.opacity(0.08), lineWidth: 1)
+        )
+    }
+
+    private func colorForStatus(_ status: String) -> Color {
+        switch status {
+        case "Success", "Verified", "Secured", "Active": return .green
+        case "Warning", "Alert": return .orange
+        case "Locked": return .red
+        default: return .blue
+        }
+    }
+
+    private func formattedTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .medium
+        return formatter.string(from: date)
     }
 
     private var statusBorderColor: Color {
