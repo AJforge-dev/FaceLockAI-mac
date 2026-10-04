@@ -1,0 +1,16 @@
+# macOS & Xcode
+.DS_Store
+*.swp
+*~
+.build/
+Packages/
+xcuserdata/
+*.xcworkspace
+*.xcodeproj
+
+# Security & Local User Vault
+FaceLockAI_Vault/
+FaceLockAI_SecretVault/
+
+# Swift Package Manager
+.swiftpm/
